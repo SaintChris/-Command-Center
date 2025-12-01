@@ -1,6 +1,22 @@
+try {
+  require("source-map-support/register");
+} catch {}
+
+console.log("Server boot starting...");
+
+let registerRoutes: any;
+let serveStatic: any;
+
+try {
+  registerRoutes = require("./routes").registerRoutes;
+  serveStatic = require("./static").serveStatic;
+  console.log("Imports loaded successfully");
+} catch (err) {
+  console.error("IMPORT ERROR:", err);
+  process.exit(1);
+}
+
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
 import { createServer } from "http";
 
 process.on("uncaughtException", (err) => {
