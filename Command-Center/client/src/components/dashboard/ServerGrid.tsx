@@ -95,17 +95,11 @@ export function ServerGrid() {
                 <div className="flex items-center gap-2">
                   <ServerIcon className="h-5 w-5 text-primary/80 group-hover:text-primary transition-colors" />
                   <div className="flex flex-col">
-                    <span
-                      className="text-sm font-bold font-mono"
-                      data-testid={`server-id-${server.id}`}
-                    >
-                      {server.serverId}
+                    <span className="text-sm font-bold font-mono" data-testid={`server-id-${server.id}`}>
+                      {server.name || server.serverId}
                     </span>
-                    <span
-                      className="text-[10px] text-muted-foreground font-mono"
-                      data-testid={`server-load-${server.id}`}
-                    >
-                      LOAD: {server.load}%
+                    <span className="text-[10px] text-muted-foreground font-mono" data-testid={`server-load-${server.id}`}>
+                      ID: {server.serverId} · LOAD: {server.load}%
                     </span>
                   </div>
                 </div>

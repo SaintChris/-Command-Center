@@ -20,12 +20,15 @@ export type User = typeof users.$inferSelect;
 export const servers = pgTable("servers", {
   id: serial("id").primaryKey(),
   serverId: text("server_id").notNull().unique(),
+  name: text("name").notNull().default("Unnamed Server"),
   region: text("region").notNull(),
   status: text("status").notNull(),
   load: integer("load").notNull().default(0),
 });
 
-export const insertServerSchema = createInsertSchema(servers).omit({ id: true });
+export const insertServerSchema = createInsertSchema(servers)
+  .omit({ id: true })
+  .extend({ name: z.string().optional() });
 export type InsertServer = z.infer<typeof insertServerSchema>;
 export type Server = typeof servers.$inferSelect;
 

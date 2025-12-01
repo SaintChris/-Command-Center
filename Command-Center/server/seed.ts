@@ -18,14 +18,14 @@ async function seed() {
   await db.delete(settings);
 
   await db.insert(servers).values([
-    { serverId: "AWS-US-E-1", region: "us-east-1", status: "healthy", load: 45 },
-    { serverId: "AWS-US-E-2", region: "us-east-1", status: "healthy", load: 52 },
-    { serverId: "AWS-US-W-1", region: "us-west-1", status: "warning", load: 88 },
-    { serverId: "GCP-EU-W-1", region: "eu-west-1", status: "healthy", load: 34 },
-    { serverId: "GCP-EU-W-2", region: "eu-west-1", status: "maintenance", load: 0 },
-    { serverId: "AZ-ASIA-S-1", region: "ap-south-1", status: "critical", load: 98 },
-    { serverId: "AZ-ASIA-E-1", region: "ap-east-1", status: "healthy", load: 41 },
-    { serverId: "AWS-SA-E-1", region: "sa-east-1", status: "healthy", load: 29 },
+    { serverId: "AWS-US-E-1", name: "US East - Primary", region: "us-east-1", status: "healthy", load: 45 },
+    { serverId: "AWS-US-E-2", name: "US East - Secondary", region: "us-east-1", status: "healthy", load: 52 },
+    { serverId: "AWS-US-W-1", name: "US West - Core", region: "us-west-1", status: "warning", load: 88 },
+    { serverId: "GCP-EU-W-1", name: "EU West - Core", region: "eu-west-1", status: "healthy", load: 34 },
+    { serverId: "GCP-EU-W-2", name: "EU West - Backup", region: "eu-west-1", status: "maintenance", load: 0 },
+    { serverId: "AZ-ASIA-S-1", name: "Asia South - Core", region: "ap-south-1", status: "critical", load: 98 },
+    { serverId: "AZ-ASIA-E-1", name: "Asia East - Core", region: "ap-east-1", status: "healthy", load: 41 },
+    { serverId: "AWS-SA-E-1", name: "South America - Core", region: "sa-east-1", status: "healthy", load: 29 },
   ]);
   console.log("✅ Servers seeded");
 

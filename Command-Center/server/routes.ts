@@ -59,6 +59,7 @@ async function refreshLiveData() {
         return {
           id: i + 1,
           serverId: r.code || r.id || `region-${i + 1}`,
+          name: r.name || r.location || r.city || r.country || `Region ${i + 1}`,
           region: r.location || r.name || r.country || r.city || "unknown",
           status,
           load,
