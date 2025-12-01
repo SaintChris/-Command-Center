@@ -85,10 +85,39 @@ export function ServerGrid() {
   return (
     <Card className="glass-panel tech-border col-span-1 md:col-span-2 lg:col-span-3">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-sm font-mono uppercase tracking-wider text-primary">
-          <Cloud className="h-4 w-4" />
-          Global Infrastructure Status
-        </CardTitle>
+        <div className="flex items-center justify-between w-full">
+          <CardTitle className="flex items-center gap-2 text-sm font-mono uppercase tracking-wider text-primary">
+            <Cloud className="h-4 w-4" />
+            Global Infrastructure Status
+          </CardTitle>
+          <div>
+            <button
+              type="button"
+              onClick={async () => {
+                const targetId = servers?.[0]?.id;
+                if (!targetId) return console.warn('No servers to run diagnostic on');
+                console.log('diagnostic button triggering PATCH for', targetId);
+                try {
+                  const r = await fetch(`/api/servers/${targetId}`, {
+                    method: 'PATCH',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'x-diagnostic-button': 'true'
+                    },
+                    body: JSON.stringify({ status: 'healthy', load: 0 })
+                  });
+                  const text = await r.text();
+                  console.log('diagnostic PATCH result', targetId, r.status, r.statusText, text);
+                } catch (err) {
+                  console.error('diagnostic PATCH error', err);
+                }
+              }}
+              className="ml-4 text-xs font-mono text-muted-foreground px-2 py-1 border rounded"
+            >
+              Run PATCH Test
+            </button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
         {servers.length === 0 ? (
