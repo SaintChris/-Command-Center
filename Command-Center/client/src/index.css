@@ -177,3 +177,13 @@
     opacity: 0.1;
   }
 }
+
+/* Ensure fullscreen/fixed overlays do not block pointer events unless explicitly open.
+   This guards against differences between dev/prod builds (purging) and different
+   overlay implementations (radix/vaul/etc.) that use `data-state="open"`. */
+.fixed.inset-0:not([data-state="open"]) {
+  pointer-events: none !important;
+}
+.fixed.inset-0[data-state="open"] {
+  pointer-events: auto !important;
+}
