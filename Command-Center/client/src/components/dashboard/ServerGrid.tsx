@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Server as ServerIcon, Circle, Cloud } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { fetchServers, updateServerStatus } from "@/lib/api";
 import type { Server } from "@shared/schema";
 
@@ -27,6 +28,41 @@ export function ServerGrid() {
       queryClient.invalidateQueries(["servers"]);
     },
   });
+
+  // TEMP: native fallback diagnostic — attach a plain DOM click listener to
+  // server cards that issues a direct PATCH so we can confirm the backend
+  // receives requests. Remove this after diagnostics are complete.
+  useEffect(() => {
+    const selector = '[data-testid^="server-card-"]';
+    function onClickFallback(e: Event) {
+      const el = (e.currentTarget || e.target) as HTMLElement | null;
+      const testid = el?.getAttribute?.('data-testid') || '';
+      const m = testid.match(/server-card-(\d+)/);
+      const id = m ? m[1] : null;
+      if (!id) return;
+      console.log('native fallback click for server id', id);
+      fetch(`/api/servers/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-diagnostic-fallback': 'true'
+        },
+        body: JSON.stringify({ status: 'healthy', load: 0 })
+      })
+        .then((r) => {
+          console.log('native fallback PATCH result', id, r.status, r.statusText);
+          return r.text().then((t) => ({ status: r.status, text: t }));
+        })
+        .then((body) => console.log('native fallback PATCH body', id, body))
+        .catch((err) => console.error('native fallback PATCH error', err));
+    }
+
+    const els = Array.from(document.querySelectorAll(selector));
+    els.forEach((el) => el.addEventListener('click', onClickFallback));
+    return () => {
+      els.forEach((el) => el.removeEventListener('click', onClickFallback));
+    };
+  }, []);
 
   if (isLoading) {
     return (
