@@ -17,7 +17,14 @@ export function ServerGrid() {
   const updateStatus = useMutation({
     mutationFn: ({ id, status, load }) =>
       updateServerStatus(id, status, load),
-    onSuccess: () => {
+    onMutate: (vars) => {
+      console.log("🔵 onClick mutation triggered with:", vars);
+    },
+    onError: (err) => {
+      console.error("❌ Mutation error:", err);
+    },
+    onSuccess: (data) => {
+      console.log("✅ Mutation success, invalidating queries:", data);
       queryClient.invalidateQueries(["servers"]);
     },
   });
@@ -60,6 +67,7 @@ export function ServerGrid() {
                 key={server.id}
                 data-testid={`server-card-${server.id}`}
                 onClick={() => {
+                  console.log("🖱️ Card clicked, server id:", server.id);
                   updateStatus.mutate({
                     id: server.id,
                     // toggle status for demo
