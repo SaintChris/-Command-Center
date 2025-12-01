@@ -5,6 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
+import Infrastructure from "@/pages/Infrastructure";
+import Users from "@/pages/Users";
+import Settings from "@/pages/Settings";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 
 function Router() {
@@ -12,9 +15,9 @@ function Router() {
     <DashboardLayout>
       <Switch>
         <Route path="/" component={Dashboard} />
-        <Route path="/infrastructure" component={Dashboard} />
-        <Route path="/users" component={Dashboard} />
-        <Route path="/settings" component={Dashboard} />
+        <Route path="/infrastructure" component={Infrastructure} />
+        <Route path="/users" component={Users} />
+        <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
     </DashboardLayout>
