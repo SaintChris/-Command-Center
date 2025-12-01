@@ -1,0 +1,179 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@plugin "tailwindcss-animate";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+  
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+}
+
+:root {
+  /* Dark Theme Default for "Cyber Professional" Look */
+  color-scheme: dark;
+  
+  /* Deep Space Blue Backgrounds */
+  --background: 222 47% 11%; /* #0f172a slate-900ish */
+  --foreground: 210 40% 98%;
+  
+  /* Slightly lighter panels with glass effect capability */
+  --card: 222 47% 14%; 
+  --card-foreground: 210 40% 98%;
+  
+  --popover: 222 47% 14%;
+  --popover-foreground: 210 40% 98%;
+  
+  /* Electric Blue Primary */
+  --primary: 199 89% 48%; /* cyan-500 */
+  --primary-foreground: 0 0% 100%;
+  
+  /* Muted/Technical Gray */
+  --secondary: 217 33% 17%;
+  --secondary-foreground: 210 40% 98%;
+  
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
+  
+  --accent: 199 89% 48%;
+  --accent-foreground: 0 0% 100%;
+  
+  --destructive: 0 62% 30%;
+  --destructive-foreground: 210 40% 98%;
+
+  --success: 142 76% 36%; /* green-600 */
+  --success-foreground: 0 0% 100%;
+
+  --warning: 38 92% 50%; /* amber-500 */
+  --warning-foreground: 0 0% 100%;
+  
+  --border: 217 33% 22%;
+  --input: 217 33% 17%;
+  --ring: 199 89% 48%;
+  
+  --radius: 0.5rem;
+  
+  /* Chart Colors - Cyberpunk/Neon */
+  --chart-1: 199 89% 48%; /* Cyan */
+  --chart-2: 280 70% 60%; /* Purple */
+  --chart-3: 142 70% 50%; /* Green */
+  --chart-4: 340 70% 60%; /* Pink */
+  --chart-5: 38 90% 60%;  /* Orange */
+  
+  --sidebar: 222 47% 10%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 199 89% 48%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 217 33% 17%;
+  --sidebar-accent-foreground: 210 40% 98%;
+  --sidebar-border: 217 33% 22%;
+  --sidebar-ring: 199 89% 48%;
+}
+
+/* Force Dark Mode styles regardless of system preference for this specific aesthetic */
+.dark {
+  /* Same as root essentially, reinforcing the dark theme */
+  --background: 222 47% 11%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 14%;
+  --card-foreground: 210 40% 98%;
+  --primary: 199 89% 48%;
+  --primary-foreground: 0 0% 100%;
+  --border: 217 33% 22%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    background-image: 
+      radial-gradient(circle at 50% 0%, hsl(222 47% 18% / 0.5) 0%, transparent 50%),
+      linear-gradient(to bottom, transparent, hsl(222 47% 11%) 100%);
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-card/80 backdrop-blur-md border border-white/5 shadow-xl;
+  }
+  
+  .tech-border {
+    @apply relative border border-border/50;
+  }
+  
+  .tech-border::before {
+    content: '';
+    @apply absolute -top-px -left-px w-2 h-2 border-t border-l border-primary opacity-50;
+  }
+  
+  .tech-border::after {
+    content: '';
+    @apply absolute -bottom-px -right-px w-2 h-2 border-b border-r border-primary opacity-50;
+  }
+
+  .scanline {
+    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.2) 50%);
+    background-size: 100% 4px;
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    opacity: 0.1;
+  }
+}
