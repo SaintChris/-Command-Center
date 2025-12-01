@@ -8,11 +8,17 @@ const db = drizzle(sql);
 async function seed() {
   console.log("🌱 Seeding database...");
 
+  // Ensure idempotent runs for local dev/CI
+  await db.delete(networkMetrics);
+  await db.delete(systemMetrics);
+  await db.delete(tickets);
+  await db.delete(servers);
+
   await db.insert(servers).values([
     { serverId: "AWS-US-E-1", region: "us-east-1", status: "healthy", load: 45 },
     { serverId: "AWS-US-E-2", region: "us-east-1", status: "healthy", load: 52 },
     { serverId: "AWS-US-W-1", region: "us-west-1", status: "warning", load: 88 },
-    { serverId: "GCP-EU-W-1", region: "eu-west-1", status: "healthy", load: 19 },
+    { serverId: "GCP-EU-W-1", region: "eu-west-1", status: "healthy", load: 34 },
     { serverId: "GCP-EU-W-2", region: "eu-west-1", status: "maintenance", load: 0 },
     { serverId: "AZ-ASIA-S-1", region: "ap-south-1", status: "critical", load: 98 },
     { serverId: "AZ-ASIA-E-1", region: "ap-east-1", status: "healthy", load: 41 },

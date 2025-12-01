@@ -16,19 +16,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const NavItem = ({ href, icon: Icon, label }: { href: string; icon: any; label: string }) => {
     const isActive = location === href;
     return (
-      <Link href={href}>
-        <Button
-          variant="ghost"
-          className={`w-full justify-start gap-3 font-mono text-sm h-12 ${
-            isActive 
-              ? "bg-primary/10 text-primary border-r-2 border-primary rounded-none" 
-              : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-          }`}
-        >
+      <Button
+        asChild
+        variant="ghost"
+        className={`w-full justify-start gap-3 font-mono text-sm h-12 ${
+          isActive 
+            ? "bg-primary/10 text-primary border-r-2 border-primary rounded-none" 
+            : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+        }`}
+      >
+        <Link href={href}>
           <Icon className="h-5 w-5" />
           {label}
-        </Button>
-      </Link>
+        </Link>
+      </Button>
     );
   };
 

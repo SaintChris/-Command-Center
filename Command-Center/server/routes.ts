@@ -1,7 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertServerSchema, insertTicketSchema, insertNetworkMetricSchema, insertSystemMetricSchema } from "@shared/schema";
+import {
+  insertServerSchema,
+  insertTicketSchema,
+  insertNetworkMetricSchema,
+  insertSystemMetricSchema,
+} from "@shared/schema";
 
 // In-memory caches for live data (refreshed periodically)
 let liveServersCache: any[] = [];
@@ -9,10 +14,23 @@ let liveNetworkCache: any[] = [];
 let liveSystemMetricCache: any = null;
 let nextNetworkId = 1;
 
+const DEFAULT_FETCH_TIMEOUT_MS = 5000;
+
+async function fetchWithTimeout(url: string, ms: number = DEFAULT_FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), ms);
+
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function refreshLiveData() {
   // Refresh servers from public regions API (Llama Cloud)
   try {
-    const res = await fetch("https://api.llama-cloud.com/v1/regions");
+    const res = await fetchWithTimeout("https://api.llama-cloud.com/v1/regions");
     if (!res.ok) throw new Error(`regions fetch status ${res.status}`);
     const regions = await res.json();
     if (Array.isArray(regions) && regions.length > 0) {
@@ -52,7 +70,7 @@ async function refreshLiveData() {
 
   // Refresh network metrics via Cloudflare speed meta (generate synthetic throughput from meta)
   try {
-    const res = await fetch("https://speed.cloudflare.com/meta");
+    const res = await fetchWithTimeout("https://speed.cloudflare.com/meta");
     if (!res.ok) throw new Error(`cloudflare meta status ${res.status}`);
     const meta = await res.json();
     // meta may contain ASN/country/city info in different shapes; use what exists
@@ -78,7 +96,7 @@ async function refreshLiveData() {
 
   // Refresh system metrics using GitHub rate_limit as a proxy
   try {
-    const res = await fetch("https://api.github.com/rate_limit");
+    const res = await fetchWithTimeout("https://api.github.com/rate_limit");
     if (!res.ok) throw new Error(`github rate status ${res.status}`);
     const json = await res.json();
     const core = json?.resources?.core || { remaining: 0, limit: 1 };
@@ -109,11 +127,9 @@ export async function registerRoutes(
 ): Promise<Server> {
   // Start background refresh when routes are registered
   // Immediately populate caches and then refresh every 15 seconds
-  try {
-    await refreshLiveData();
-  } catch (e) {
+  refreshLiveData().catch((e) => {
     console.error("Initial live data refresh failed:", e);
-  }
+  });
   const interval = setInterval(() => {
     refreshLiveData().catch((err) => console.error("refreshLiveData error:", err));
   }, 15_000);
@@ -148,7 +164,8 @@ export async function registerRoutes(
   app.patch("/api/servers/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const server = await storage.updateServer(id, req.body);
+      const validatedData = insertServerSchema.partial().parse(req.body);
+      const server = await storage.updateServer(id, validatedData);
       if (!server) {
         return res.status(404).json({ error: "Server not found" });
       }
@@ -190,7 +207,8 @@ export async function registerRoutes(
   app.patch("/api/tickets/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const ticket = await storage.updateTicket(id, req.body);
+      const validatedData = insertTicketSchema.partial().parse(req.body);
+      const ticket = await storage.updateTicket(id, validatedData);
       if (!ticket) {
         return res.status(404).json({ error: "Ticket not found" });
       }
@@ -202,11 +220,14 @@ export async function registerRoutes(
 
   app.get("/api/network-metrics", async (req, res) => {
     try {
+      const requestedLimit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 100) : 20;
+
       // return cached live network metrics if available
       if (liveNetworkCache && liveNetworkCache.length > 0) {
-        return res.json(liveNetworkCache.slice(0, req.query.limit ? parseInt(req.query.limit as string) : liveNetworkCache.length));
+        return res.json(liveNetworkCache.slice(0, limit));
       }
-      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+
       const metrics = await storage.getRecentNetworkMetrics(limit);
       return res.json(metrics);
     } catch (error) {

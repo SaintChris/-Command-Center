@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Server as ServerIcon, Circle, Cloud } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -66,18 +67,8 @@ export function ServerGrid() {
               <div
                 key={server.id}
                 data-testid={`server-card-${server.id}`}
-                onClick={() => {
-                  console.log("🖱️ Card clicked, server id:", server.id);
-                  updateStatus.mutate({
-                    id: server.id,
-                    // toggle status for demo
-                    status:
-                      server.status === "healthy" ? "warning" : "healthy",
-                    load: Math.floor(Math.random() * 100),
-                  });
-                }}
                 className={cn(
-                  "p-3 rounded bg-card/50 border transition-all duration-300 hover:bg-card/80 group cursor-pointer",
+                  "p-3 rounded bg-card/50 border transition-all duration-300 hover:bg-card/80 group",
                   server.status === "healthy" && "border-success/20",
                   server.status === "warning" && "border-warning/20",
                   server.status === "critical" &&
@@ -130,6 +121,22 @@ export function ServerGrid() {
                     )}
                     style={{ width: `${server.load}%` }}
                   />
+                </div>
+                <div className="mt-3">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      updateStatus.mutate({
+                        id: server.id,
+                        // toggle status for demo
+                        status: server.status === "healthy" ? "warning" : "healthy",
+                        load: Math.floor(Math.random() * 100),
+                      });
+                    }}
+                  >
+                    Toggle status
+                  </Button>
                 </div>
               </div>
             ))}
