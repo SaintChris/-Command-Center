@@ -167,29 +167,11 @@
     @apply absolute -bottom-px -right-px w-2 h-2 border-b border-r border-primary opacity-50;
   }
 
-  .scanline {
-    background: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.2) 50%);
-    background-size: 100% 4px;
-    pointer-events: none;
-    position: fixed;
-    inset: 0;
-    z-index: 50;
-    opacity: 0.1;
-  }
+  /* scanline moved to DashboardLayout as a separate fixed overlay — no longer needed here */
 }
 
-/* Ensure fullscreen/fixed overlays do not block pointer events unless explicitly open.
-   This guards against differences between dev/prod builds (purging) and different
-   overlay implementations (radix/vaul/etc.) that use `data-state="open"`. */
-.fixed.inset-0:not([data-state="open"]) {
-  pointer-events: none !important;
-}
-.fixed.inset-0[data-state="open"] {
-  pointer-events: auto !important;
-}
-
-/* app-overlay: ensure overlays are inert by default; allow when open.
-   Covers Radix (`data-state="open"`) and Vaul (`data-open="true"`) attributes. */
+/* Overlay guards: ensure dialog/sheet/drawer overlays are inert by default.
+   Only make them interactive when their state indicates they are open. */
 .app-overlay {
   pointer-events: none !important;
 }

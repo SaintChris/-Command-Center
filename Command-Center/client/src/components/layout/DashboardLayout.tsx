@@ -80,11 +80,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex overflow-hidden scanline">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 flex-col fixed inset-y-0 z-50">
-        <SidebarContent />
-      </aside>
+    <>
+      {/* Visual scanline overlay — truly inert, does not interfere with layout or events */}
+      <div className="fixed inset-0 z-40 pointer-events-none" style={{
+        background: 'linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, 0.2) 50%)',
+        backgroundSize: '100% 4px',
+        opacity: 0.1,
+      }} />
+      <div className="min-h-screen bg-background text-foreground flex overflow-hidden">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex w-64 flex-col fixed inset-y-0 z-50">
+          <SidebarContent />
+        </aside>
 
       {/* Mobile Sidebar */}
       <Sheet>
@@ -117,5 +124,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </main>
     </div>
+    </>
   );
 }
