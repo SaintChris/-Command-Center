@@ -187,3 +187,14 @@
 .fixed.inset-0[data-state="open"] {
   pointer-events: auto !important;
 }
+
+/* app-overlay: ensure overlays are inert by default; allow when open.
+   Covers Radix (`data-state="open"`) and Vaul (`data-open="true"`) attributes. */
+.app-overlay {
+  pointer-events: none !important;
+}
+.app-overlay[data-state="open"],
+.app-overlay[data-open="true"],
+.app-overlay[open] {
+  pointer-events: auto !important;
+}
