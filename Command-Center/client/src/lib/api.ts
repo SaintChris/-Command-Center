@@ -1,4 +1,11 @@
-import { Server, Ticket, NetworkMetric, SystemMetric } from "@shared/schema";
+import { Server, Ticket, NetworkMetric, SystemMetric, User } from "@shared/schema";
+
+export type SettingsPayload = {
+  maintenanceMode?: boolean;
+  alertEmail?: string;
+  theme?: "light" | "dark" | "system";
+  notifications?: "all" | "critical" | "none";
+};
 
 export async function fetchServers(): Promise<Server[]> {
   const response = await fetch("/api/servers");
@@ -41,5 +48,52 @@ export async function updateTicketStatus(id: number, status: string): Promise<Ti
     body: JSON.stringify({ status }),
   });
   if (!response.ok) throw new Error("Failed to update ticket");
+  return response.json();
+}
+
+export async function fetchUsers(): Promise<User[]> {
+  const response = await fetch("/api/users");
+  if (!response.ok) throw new Error("Failed to fetch users");
+  return response.json();
+}
+
+export async function createUser(data: { username: string; password: string }): Promise<User> {
+  const response = await fetch("/api/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to create user");
+  return response.json();
+}
+
+export async function updateUser(id: string, data: Partial<{ username: string; password: string }>): Promise<User> {
+  const response = await fetch(`/api/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to update user");
+  return response.json();
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  const response = await fetch(`/api/users/${id}`, { method: "DELETE" });
+  if (!response.ok) throw new Error("Failed to delete user");
+}
+
+export async function fetchSettings(): Promise<SettingsPayload> {
+  const response = await fetch("/api/settings");
+  if (!response.ok) throw new Error("Failed to fetch settings");
+  return response.json();
+}
+
+export async function updateSettings(data: SettingsPayload): Promise<SettingsPayload> {
+  const response = await fetch("/api/settings", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to update settings");
   return response.json();
 }

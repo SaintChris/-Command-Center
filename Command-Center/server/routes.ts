@@ -6,13 +6,31 @@ import {
   insertTicketSchema,
   insertNetworkMetricSchema,
   insertSystemMetricSchema,
+  insertUserSchema,
 } from "@shared/schema";
+import { z } from "zod";
 
 // In-memory caches for live data (refreshed periodically)
 let liveServersCache: any[] = [];
 let liveNetworkCache: any[] = [];
 let liveSystemMetricCache: any = null;
 let nextNetworkId = 1;
+
+const settingsSchema = z.object({
+  maintenanceMode: z.boolean().optional(),
+  alertEmail: z.string().email().optional(),
+  theme: z.enum(["light", "dark", "system"]).optional(),
+  notifications: z.enum(["all", "critical", "none"]).optional(),
+});
+
+type RuntimeSettings = z.infer<typeof settingsSchema>;
+
+let runtimeSettings: RuntimeSettings = {
+  maintenanceMode: false,
+  alertEmail: "ops@example.com",
+  theme: "system",
+  notifications: "all",
+};
 
 const DEFAULT_FETCH_TIMEOUT_MS = 5000;
 
@@ -264,6 +282,66 @@ export async function registerRoutes(
       res.status(201).json(metric);
     } catch (error) {
       res.status(400).json({ error: "Invalid metric data" });
+    }
+  });
+
+  app.get("/api/users", async (_req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("GET /api/users error:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/users", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      const user = await storage.createUser(validatedData);
+      res.status(201).json(user);
+    } catch (error) {
+      console.error("POST /api/users error:", error);
+      res.status(400).json({ error: "Invalid user data" });
+    }
+  });
+
+  app.patch("/api/users/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      const validatedData = insertUserSchema.partial().parse(req.body);
+      const user = await storage.updateUser(id, validatedData);
+      if (!user) return res.status(404).json({ error: "User not found" });
+      res.json(user);
+    } catch (error) {
+      console.error("PATCH /api/users error:", error);
+      res.status(400).json({ error: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", async (req, res) => {
+    try {
+      const id = req.params.id;
+      await storage.deleteUser(id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("DELETE /api/users error:", error);
+      res.status(400).json({ error: "Failed to delete user" });
+    }
+  });
+
+  app.get("/api/settings", (_req, res) => {
+    res.json(runtimeSettings);
+  });
+
+  app.patch("/api/settings", (req, res) => {
+    try {
+      const updates = settingsSchema.parse(req.body);
+      runtimeSettings = { ...runtimeSettings, ...updates };
+      res.json(runtimeSettings);
+    } catch (error) {
+      console.error("PATCH /api/settings error:", error);
+      res.status(400).json({ error: "Invalid settings payload" });
     }
   });
 

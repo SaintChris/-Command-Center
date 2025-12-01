@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { servers, tickets, networkMetrics, systemMetrics } from "@shared/schema";
+import { servers, tickets, networkMetrics, systemMetrics, users } from "@shared/schema";
 
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
@@ -13,6 +13,7 @@ async function seed() {
   await db.delete(systemMetrics);
   await db.delete(tickets);
   await db.delete(servers);
+  await db.delete(users);
 
   await db.insert(servers).values([
     { serverId: "AWS-US-E-1", region: "us-east-1", status: "healthy", load: 45 },
@@ -57,6 +58,12 @@ async function seed() {
     networkThroughput: 1.2,
   });
   console.log("✅ System metrics seeded");
+
+  await db.insert(users).values([
+    { username: "admin", password: "admin123" },
+    { username: "analyst", password: "changeme" },
+  ]);
+  console.log("✅ Users seeded");
 
   console.log("🎉 Database seeded successfully!");
 }
