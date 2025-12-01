@@ -14,10 +14,14 @@ import {
   tickets,
   networkMetrics,
   systemMetrics,
+  settings,
+  type Settings,
+  type InsertSettings,
 } from "@shared/schema";
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
 import { desc, eq } from "drizzle-orm";
+import crypto from "crypto";
 
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
@@ -29,6 +33,9 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined>;
   deleteUser(id: string): Promise<void>;
+
+  getSettings(): Promise<Settings>;
+  updateSettings(settings: Partial<InsertSettings>): Promise<Settings>;
   
   getAllServers(): Promise<Server[]>;
   getServer(id: number): Promise<Server | undefined>;
@@ -50,6 +57,12 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  private hashPassword(password: string): string {
+    const salt = crypto.randomBytes(16).toString("hex");
+    const hash = crypto.pbkdf2Sync(password, salt, 100_000, 64, "sha512").toString("hex");
+    return `${salt}:${hash}`;
+  }
+
   async getUser(id: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
     return result[0];
@@ -65,12 +78,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const result = await db.insert(users).values(insertUser).returning();
+    const hashed = this.hashPassword(insertUser.password);
+    const result = await db.insert(users).values({ ...insertUser, password: hashed }).returning();
     return result[0];
   }
 
   async updateUser(id: string, user: Partial<InsertUser>): Promise<User | undefined> {
-    const result = await db.update(users).set(user).where(eq(users.id, id)).returning();
+    const updatedUser = { ...user } as Partial<InsertUser>;
+    if (user.password) {
+      updatedUser.password = this.hashPassword(user.password);
+    }
+    const result = await db.update(users).set(updatedUser).where(eq(users.id, id)).returning();
     return result[0];
   }
 
@@ -140,6 +158,25 @@ export class DatabaseStorage implements IStorage {
 
   async createSystemMetric(metric: InsertSystemMetric): Promise<SystemMetric> {
     const result = await db.insert(systemMetrics).values(metric).returning();
+    return result[0];
+  }
+
+  async getSettings(): Promise<Settings> {
+    const result = await db.select().from(settings).limit(1);
+    if (result[0]) return result[0];
+
+    // seed defaults if not present
+    const inserted = await db.insert(settings).values({}).returning();
+    return inserted[0];
+  }
+
+  async updateSettings(payload: Partial<InsertSettings>): Promise<Settings> {
+    const current = await this.getSettings();
+    const result = await db
+      .update(settings)
+      .set({ ...payload })
+      .where(eq(settings.id, current.id))
+      .returning();
     return result[0];
   }
 }

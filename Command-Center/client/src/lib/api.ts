@@ -1,4 +1,4 @@
-import { Server, Ticket, NetworkMetric, SystemMetric, User } from "@shared/schema";
+import { Server, Ticket, NetworkMetric, SystemMetric, User, Settings } from "@shared/schema";
 
 export type SettingsPayload = {
   maintenanceMode?: boolean;
@@ -82,13 +82,13 @@ export async function deleteUser(id: string): Promise<void> {
   if (!response.ok) throw new Error("Failed to delete user");
 }
 
-export async function fetchSettings(): Promise<SettingsPayload> {
+export async function fetchSettings(): Promise<Settings> {
   const response = await fetch("/api/settings");
   if (!response.ok) throw new Error("Failed to fetch settings");
   return response.json();
 }
 
-export async function updateSettings(data: SettingsPayload): Promise<SettingsPayload> {
+export async function updateSettings(data: SettingsPayload): Promise<Settings> {
   const response = await fetch("/api/settings", {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },

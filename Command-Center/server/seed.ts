@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
-import { servers, tickets, networkMetrics, systemMetrics, users } from "@shared/schema";
+import crypto from "crypto";
+import { servers, tickets, networkMetrics, systemMetrics, users, settings } from "@shared/schema";
 
 const sql = neon(process.env.DATABASE_URL!);
 const db = drizzle(sql);
@@ -14,6 +15,7 @@ async function seed() {
   await db.delete(tickets);
   await db.delete(servers);
   await db.delete(users);
+  await db.delete(settings);
 
   await db.insert(servers).values([
     { serverId: "AWS-US-E-1", region: "us-east-1", status: "healthy", load: 45 },
@@ -59,11 +61,26 @@ async function seed() {
   });
   console.log("✅ System metrics seeded");
 
+  const hash = (password: string) => {
+    // deterministic seed hash; runtime hashing uses stronger PBKDF2 iterations
+    const salt = crypto.createHash("sha256").update("seed-salt").digest("hex");
+    const derived = crypto.pbkdf2Sync(password, salt, 50_000, 64, "sha512").toString("hex");
+    return `${salt}:${derived}`;
+  };
+
   await db.insert(users).values([
-    { username: "admin", password: "admin123" },
-    { username: "analyst", password: "changeme" },
+    { username: "admin", password: hash("admin123") },
+    { username: "analyst", password: hash("changeme") },
   ]);
   console.log("✅ Users seeded");
+
+  await db.insert(settings).values({
+    maintenanceMode: false,
+    alertEmail: "ops@example.com",
+    theme: "system",
+    notifications: "all",
+  });
+  console.log("✅ Settings seeded");
 
   console.log("🎉 Database seeded successfully!");
 }

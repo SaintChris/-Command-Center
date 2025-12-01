@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, serial, integer, timestamp, real } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, serial, integer, timestamp, real, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -66,3 +66,15 @@ export const systemMetrics = pgTable("system_metrics", {
 export const insertSystemMetricSchema = createInsertSchema(systemMetrics).omit({ id: true, timestamp: true });
 export type InsertSystemMetric = z.infer<typeof insertSystemMetricSchema>;
 export type SystemMetric = typeof systemMetrics.$inferSelect;
+
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  maintenanceMode: boolean("maintenance_mode").notNull().default(false),
+  alertEmail: text("alert_email").notNull().default(""),
+  theme: text("theme").notNull().default("system"),
+  notifications: text("notifications").notNull().default("all"),
+});
+
+export const insertSettingsSchema = createInsertSchema(settings).omit({ id: true });
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+export type Settings = typeof settings.$inferSelect;

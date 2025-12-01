@@ -7,8 +7,8 @@ import {
   insertNetworkMetricSchema,
   insertSystemMetricSchema,
   insertUserSchema,
+  insertSettingsSchema,
 } from "@shared/schema";
-import { z } from "zod";
 
 // In-memory caches for live data (refreshed periodically)
 let liveServersCache: any[] = [];
@@ -16,21 +16,13 @@ let liveNetworkCache: any[] = [];
 let liveSystemMetricCache: any = null;
 let nextNetworkId = 1;
 
-const settingsSchema = z.object({
-  maintenanceMode: z.boolean().optional(),
-  alertEmail: z.string().email().optional(),
-  theme: z.enum(["light", "dark", "system"]).optional(),
-  notifications: z.enum(["all", "critical", "none"]).optional(),
-});
-
-type RuntimeSettings = z.infer<typeof settingsSchema>;
-
-let runtimeSettings: RuntimeSettings = {
-  maintenanceMode: false,
-  alertEmail: "ops@example.com",
-  theme: "system",
-  notifications: "all",
+const sanitizeUser = (user: any) => {
+  if (!user) return user;
+  // never return password hash to clients
+  const { password, ...rest } = user;
+  return rest;
 };
+
 
 const DEFAULT_FETCH_TIMEOUT_MS = 5000;
 
@@ -288,7 +280,7 @@ export async function registerRoutes(
   app.get("/api/users", async (_req, res) => {
     try {
       const users = await storage.getAllUsers();
-      res.json(users);
+      res.json(users.map(sanitizeUser));
     } catch (error) {
       console.error("GET /api/users error:", error);
       res.status(500).json({ error: "Failed to fetch users" });
@@ -299,7 +291,7 @@ export async function registerRoutes(
     try {
       const validatedData = insertUserSchema.parse(req.body);
       const user = await storage.createUser(validatedData);
-      res.status(201).json(user);
+      res.status(201).json(sanitizeUser(user));
     } catch (error) {
       console.error("POST /api/users error:", error);
       res.status(400).json({ error: "Invalid user data" });
@@ -312,7 +304,7 @@ export async function registerRoutes(
       const validatedData = insertUserSchema.partial().parse(req.body);
       const user = await storage.updateUser(id, validatedData);
       if (!user) return res.status(404).json({ error: "User not found" });
-      res.json(user);
+      res.json(sanitizeUser(user));
     } catch (error) {
       console.error("PATCH /api/users error:", error);
       res.status(400).json({ error: "Failed to update user" });
@@ -331,16 +323,27 @@ export async function registerRoutes(
   });
 
   app.get("/api/settings", (_req, res) => {
-    res.json(runtimeSettings);
+    storage
+      .getSettings()
+      .then((s) => res.json(s))
+      .catch((error) => {
+        console.error("GET /api/settings error:", error);
+        res.status(500).json({ error: "Failed to fetch settings" });
+      });
   });
 
   app.patch("/api/settings", (req, res) => {
     try {
-      const updates = settingsSchema.parse(req.body);
-      runtimeSettings = { ...runtimeSettings, ...updates };
-      res.json(runtimeSettings);
+      const updates = insertSettingsSchema.partial().parse(req.body);
+      storage
+        .updateSettings(updates)
+        .then((settings) => res.json(settings))
+        .catch((error) => {
+          console.error("PATCH /api/settings error:", error);
+          res.status(500).json({ error: "Failed to update settings" });
+        });
     } catch (error) {
-      console.error("PATCH /api/settings error:", error);
+      console.error("PATCH /api/settings validation error:", error);
       res.status(400).json({ error: "Invalid settings payload" });
     }
   });
